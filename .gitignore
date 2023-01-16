@@ -10,3 +10,4 @@ notes.ipynb
 coverage.xml
 build
 dist
+/.direnv/
