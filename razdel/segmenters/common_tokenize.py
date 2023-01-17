@@ -15,11 +15,6 @@ from razdel.split import (
     Splitter,
 )
 
-from .base import (
-    safe_next,
-    Segmenter,
-    DebugSegmenter
-)
 from .punct import (
     DASHES,
     ENDINGS,
@@ -271,14 +266,7 @@ class TokenSplitter(Splitter):
             yield atom.text
 
 
-########
-#
-#   SEGMENT
-#
-########
-
-
-RULES = [
+COMMON_RULES = [
     DashRule(),
     UnderscoreRule(),
     FloatRule(),
@@ -289,34 +277,3 @@ RULES = [
 
     FunctionRule(yahoo),
 ]
-
-
-class TokenSegmenter(Segmenter):
-    def __init__(self, split=TokenSplitter(), rules=RULES):
-        super(TokenSegmenter, self).__init__(split, rules)
-
-    def segment(self, parts):
-        buffer = safe_next(parts)
-        if buffer is None:
-            return
-
-        for split in parts:
-            right = next(parts)
-            split.buffer = buffer
-            if not split.delimiter and self.join(split):
-                buffer += right
-            else:
-                yield buffer
-                buffer = right
-        yield buffer
-
-    @property
-    def debug(self):
-        return DebugTokenSegmenter()
-
-
-class DebugTokenSegmenter(TokenSegmenter, DebugSegmenter):
-    pass
-
-
-tokenize = TokenSegmenter()

@@ -1,4 +1,6 @@
+import pytest
 
+pytest.register_assert_rewrite("razdel.tests.common")
 
 def pytest_assertrepr_compare(op, left, right):
     # add one more line for "assert ..."
@@ -12,7 +14,7 @@ def pytest_assertrepr_compare(op, left, right):
 
 
 def pytest_addoption(parser):
-    parser.addoption('--int', type='int')
+    parser.addoption('--int', type=int)
 
 
 def pytest_generate_tests(metafunc):
