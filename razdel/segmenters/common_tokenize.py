@@ -128,8 +128,22 @@ class InsideDigitsRule(Rule2112):
         if left.type == INT and right.type == INT:
             return JOIN
 
+#########
+#
+#   Model names/ids (letters with digits)
+#
+##########
 
-########
+def model_names(split: "TokenSplit"):
+    if split.right_1.type in (INT, RU, LAT):
+        #MP3, А4, XR4Ti
+        any_letter_before = any(c.isalpha() for c in split.buffer)
+        if any_letter_before:
+            return JOIN
+
+
+
+#########
 #
 #   PUNCT
 #
@@ -276,4 +290,7 @@ COMMON_RULES = [
     FunctionRule(other),
 
     FunctionRule(yahoo),
+
+    FunctionRule(model_names),
+
 ]
