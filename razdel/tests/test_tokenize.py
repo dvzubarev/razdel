@@ -17,8 +17,17 @@ UNIT = parse_partitions([
     'К_тому_же',
     '...',
     '1,5',
+    '300,000',
+    '3.14',
     '1/2',
-    '20|:|55',
+    '20:55',
+    '10x8',
+    '10Х8',
+    '20.04.2012',
+
+    '$|500',
+    '2,67|%',
+    '+|27|°С',
 
     '»||.',
     ')||.',
@@ -36,15 +45,16 @@ UNIT = parse_partitions([
 def test_unit(test):
     run(tokenize, test)
 
+RU_UNIT = parse_partitions([
+    '1-ый',
+    '79-летний',
+    'пол-яблока',
+])
 
-def int_tests(count):
-    path = data_path('tokens.txt')
-    lines = data_lines(path, count)
-    return parse_partitions(lines)
+@pytest.mark.parametrize('test', RU_UNIT)
+def test_ru_unit(test):
+    run(tokenize, test)
 
-
-def test_int(int_test):
-    run(tokenize, int_test)
 
 EN_APOSTROPHE_CASES = parse_partitions([
     "(|companies|’|)",
@@ -82,3 +92,13 @@ EN_SPECIAL_CASES = parse_partitions([
 @pytest.mark.parametrize('test', EN_SPECIAL_CASES)
 def test_en_special_cases(test):
     run(tokenize, test)
+
+
+def int_tests(count):
+    path = data_path('tokens.txt')
+    lines = data_lines(path, count)
+    return parse_partitions(lines)
+
+
+def test_int(int_test):
+    run(tokenize, int_test)

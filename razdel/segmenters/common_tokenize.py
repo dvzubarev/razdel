@@ -118,11 +118,11 @@ class FloatRule(Rule2112):
             return JOIN
 
 
-class FractionRule(Rule2112):
-    name = 'fraction'
+class InsideDigitsRule(Rule2112):
+    name = 'inside_digits'
 
     def delimiter(self, delimiter):
-        return delimiter in '/\\'
+        return delimiter in 'xXхХ:/\\'
 
     def rule(self, left, right):
         if left.type == INT and right.type == INT:
@@ -270,7 +270,7 @@ COMMON_RULES = [
     DashRule(),
     UnderscoreRule(),
     FloatRule(),
-    FractionRule(),
+    InsideDigitsRule(),
 
     FunctionRule(punct),
     FunctionRule(other),
