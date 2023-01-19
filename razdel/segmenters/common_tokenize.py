@@ -29,22 +29,78 @@ RU = 'RU'
 LAT = 'LAT'
 INT = 'INT'
 PUNCT = 'PUNCT'
+URI = 'URI'
+DOI = 'DOI'
+DOMAIN = 'DOM'
+EMAIL = 'EMAIL'
 OTHER = 'OTHER'
 
 PUNCTS = '\\/!#$%&*+,.:;<=>?@^_`|~№…' + DASHES + QUOTES + BRACKETS
 
+####complex atoms support
+_URI_SCHEME_REGEXP = r'\b(https?|git|s3)://'
+
+_URI_FULL_VALID_PATH_REGEXP = r'(?:[!#$&-;=?-[\]_a-z~]|%[0-9a-f]{2})*'
+_URI_SANE_PATH_REGEXP = r'(?:[-!#$&*+.-;=?-Z_a-z~]|%[0-9a-f]{2})*'
+_URI_HOST_REGEXP = r'[-a-zа-я0-9.@:._\+~=]{1,256}\b'
+
+_COMMON_TLD_REGEXP = r'(?:com|net|org|int|edu|gov|de|icu|uk|ru|info|top|xyz|tk|cn|ga|cf|nl|io)'
+
+DOMAIN_WITH_PATH_REGEXP = r'\b[-a-zа-я0-9.]{1,256}\.' + _COMMON_TLD_REGEXP + _URI_SANE_PATH_REGEXP
+
+URI_WITH_HOST_REGEXP = _URI_SCHEME_REGEXP + _URI_HOST_REGEXP + _URI_SANE_PATH_REGEXP
+DOI_REGEXP = r'doi:10\.\d+' + _URI_FULL_VALID_PATH_REGEXP
+
+EMAIL_REGEXP = r"\b[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]{1,256}\b"
+
 ATOM = re.compile(
-    r'''
-    (?P<RU>[а-яё]+)
+    rf'''
+    (?P<URI>{URI_WITH_HOST_REGEXP})
+    |(?P<DOI>{DOI_REGEXP})
+    |(?P<DOM>{DOMAIN_WITH_PATH_REGEXP})
+    |(?P<EMAIL>{EMAIL_REGEXP})
+    |(?P<RU>[а-яё]+)
     |(?P<LAT>[a-z]+)
     |(?P<INT>\d+)
-    |(?P<PUNCT>[%s])
+    |(?P<PUNCT>[{re.escape(PUNCTS)}])
     |(?P<OTHER>\S)
-    ''' % re.escape(PUNCTS),
+    ''',
     re.I | re.U | re.X
 )
 
 SMILE = re.compile(r'^' + SMILES + '$', re.U)
+
+
+##########
+#
+#  HELPERS
+#
+######
+
+def clean_uri_atom(uri_text):
+    fixed_uri = None
+    if uri_text[-1] in ')]':
+        #brackets are allowed in uri and they used in some DOIs
+        #but doi can be in bracket, for example (doi:10.1/1).
+        #So closing bracket will be part of a DOI, but this is mistake.
+        #Try to fix this mistake, assuming that brackets  should be balanced inside DOI.
+        closing_symbol = uri_text[-1]
+        opening_symbol = '(' if closing_symbol == ')' else '['
+        num_opening_symbols = uri_text.count(opening_symbol)
+        num_closing_symbols = uri_text.count(closing_symbol)
+        if num_closing_symbols != num_opening_symbols:
+            fixed_uri = uri_text[:-1]
+
+    elif uri_text[-1] in ',:;.!?*':
+        #its likely to be not related to uri symbols
+        fixed_uri = uri_text[:-1]
+
+
+    if fixed_uri is not None:
+        #repeate this operation, since there are possible cases: <end of doi>),
+        return clean_uri_atom(fixed_uri)
+    return uri_text
+
 
 
 ##########
@@ -251,21 +307,41 @@ class TokenSplit(Split):
             return self.right_atoms[2]
 
 
+
 class TokenSplitter(Splitter):
     def __init__(self, window=3):
         self.window = window
 
+    def _create_atoms_from_uri(self, match, atom_type):
+        uri_text = match.group(0)
+        cleaned_uri_text = clean_uri_atom(uri_text)
+        uri_start = match.start()
+        uri_end = uri_start + len(cleaned_uri_text)
+        yield Atom(uri_start, uri_end, atom_type, cleaned_uri_text)
+
+        rest_atoms = len(uri_text) - len(cleaned_uri_text)
+        atom_start = uri_end - uri_start
+
+        while rest_atoms:
+            yield Atom(atom_start, atom_start+1, PUNCT, uri_text[atom_start])
+            rest_atoms -= 1
+            atom_start += 1
+
+
     def atoms(self, text):
         matches = ATOM.finditer(text)
         for match in matches:
-            start = match.start()
-            stop = match.end()
-            type = match.lastgroup
-            text = match.group(0)
-            yield Atom(
-                start, stop,
-                type, text
-            )
+            atom_type = match.lastgroup
+            if atom_type in (URI, DOI, DOMAIN, EMAIL):
+                yield from self._create_atoms_from_uri(match, atom_type)
+            else:
+                start = match.start()
+                stop = match.end()
+                text = match.group(0)
+                yield Atom(
+                    start, stop,
+                    atom_type, text
+                )
 
     def __call__(self, text):
         atoms = list(self.atoms(text))
