@@ -2,6 +2,7 @@
 import pytest
 
 from razdel import tokenize
+from razdel.segmenters.common_tokenize import BaseWordDictionary, init_words_dictionary
 
 from .partition import parse_partitions
 from .common import (
@@ -13,7 +14,6 @@ from .common import (
 
 UNIT = parse_partitions([
     '1',
-    'что-то',
     'К_тому_же',
     '...',
     '1,5',
@@ -24,6 +24,7 @@ UNIT = parse_partitions([
     '10x8',
     '10Х8',
     '20.04.2012',
+    '1991|-|1995',
 
     '$|500',
     '2,67|%',
@@ -41,6 +42,7 @@ UNIT = parse_partitions([
     'Ми-8',
     'МЗП-1М',
     'x3-9890',
+    'MiG-23BN',
     'i|&|1',
     'S&P',
     'AT&T',
@@ -79,20 +81,47 @@ UNIT = parse_partitions([
 def test_unit(test):
     run(tokenize, test)
 
+
+
+
+@pytest.fixture
+def with_words_dict():
+    class DummyDict(BaseWordDictionary):
+        def __init__(self) -> None:
+            super().__init__()
+            self.known_words = {'что-то', 'премьер-министром'}
+        def is_word_known(self, word, lang):
+            return word in self.known_words
+
+    words_dict = DummyDict()
+    init_words_dictionary(words_dict)
+    return words_dict
+
+
+
 RU_UNIT = parse_partitions([
+    'что-то',
+    'премьер-министром',
+    'строитель|-|программист',
+    '1-ый',
+    '79-летний',
+    'пол|-|яблока',
+    'Вася|-|то',
+    'сине-зеленый',
+    'уныло-однообразном',
+    'химико-биологическому',
+    'общественно-трудовые',
+
     'О\'Нил',
     'Кот-д’Ивуар',
     'Д’Артаньян',
     'Л\'этуаль',
     "пол|'|слова",
 
-    '1-ый',
-    '79-летний',
-    'пол-яблока',
 ])
 
 @pytest.mark.parametrize('test', RU_UNIT)
-def test_ru_unit(test):
+def test_ru_unit(test, with_words_dict):
     run(tokenize, test)
 
 
@@ -144,11 +173,16 @@ EN_MISC_CASES = parse_partitions([
     '3rd',
     '80th',
     '1980s',
-    '1908s',
+    '1908|s',
+    'mid-1990s',
+    'mid-90s',
     '80s',
-    '85|s'
-])
+    '85|s',
+    'its| |30|-|day',
+    'e-ink',
+    'vice-president',
 
+])
 
 @pytest.mark.parametrize('test', EN_MISC_CASES)
 def test_en_misc_cases(test):

@@ -20,6 +20,7 @@ from .punct import (
     ENDINGS,
     QUOTES,
     BRACKETS,
+    APOSTROPHES,
 
     SMILES
 )
@@ -36,7 +37,6 @@ EMAIL = 'EMAIL'
 OTHER = 'OTHER'
 
 PUNCTS = '\\/!#$%&*+,.:;<=>?@^_`|~№…' + DASHES + QUOTES + BRACKETS
-APOSTROPHES = "'’`"
 
 ####complex atoms support
 _URI_SCHEME_REGEXP = r'\b(https?|git|s3)://'
@@ -102,6 +102,29 @@ def clean_uri_atom(uri_text):
         return clean_uri_atom(fixed_uri)
     return uri_text
 
+##########
+#
+#  Dictionaries support
+#
+######
+
+_WORDS_DICTIONARY = None
+
+def init_words_dictionary(words_dict):
+    global _WORDS_DICTIONARY
+    _WORDS_DICTIONARY = words_dict
+
+
+class BaseWordDictionary:
+    def is_word_known(self, word:str, lang: str):
+        return False
+
+def get_words_dictionary()->BaseWordDictionary:
+    global _WORDS_DICTIONARY
+    if _WORDS_DICTIONARY is None:
+        #by default init with empty dict
+        _WORDS_DICTIONARY = BaseWordDictionary()
+    return _WORDS_DICTIONARY
 
 
 ##########
@@ -146,10 +169,24 @@ class DashRule(Rule2112):
     def delimiter(self, delimiter):
         return delimiter in DASHES
 
-    def rule(self, left, right):
-        if left.type == PUNCT or right.type == PUNCT:
-            return
-        return JOIN
+
+    def rule(self, left:"Atom", right:"Atom"):
+        if left.type == INT and right.type == RU:
+            return JOIN
+
+        if left.type in (LAT, RU) and right.type == INT:
+            return JOIN
+
+
+        if left.type in (RU, LAT) and right.type in (RU, LAT):
+            # keep this as single token if it is found in dictionary, split otherwise
+            words_dict = get_words_dictionary()
+            word = left.text + '-' + right.text
+            lang = 'ru' if left.type == RU or right.type == RU else 'en'
+            if words_dict.is_word_known(word, lang):
+                return JOIN
+
+
 
 
 class UnderscoreRule(Rule2112):
@@ -215,11 +252,20 @@ class InsideDigitsRule(Rule2112):
 ##########
 
 def alphanum_ids(split: "TokenSplit"):
-    if split.right_1.type in (INT, RU, LAT):
+    if split.right_1.type == INT and any(c.isalpha() for c in split.buffer):
         #MP3, А4, XR4Ti
-        any_letter_before = any(c.isalpha() for c in split.buffer)
-        if any_letter_before:
-            return JOIN
+        return JOIN
+    if (split.left_1.type == LAT and split.right_1.type == RU or
+        split.left_1.type == RU and split.right_1.type == LAT):
+        #СаМgВ6O8
+        return JOIN
+
+    if (split.left_1.type == INT
+        and (split.right_1.text in DASHES or split.right_1.type in (LAT, RU))
+        and not split.buffer.isdigit()
+        ):
+        # x3-9890
+        return JOIN
 
 def tags(split: "TokenSplit"):
     if split.left == '@' and split.right_1.type in (INT, RU, LAT):

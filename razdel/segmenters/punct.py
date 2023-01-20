@@ -14,4 +14,6 @@ BRACKETS = OPEN_BRACKETS + CLOSE_BRACKETS
 
 BOUNDS = QUOTES + BRACKETS
 
+APOSTROPHES = "'’`"
+
 SMILES = r'[=:;]-?[)(]{1,3}'  # :-) ;) =(((

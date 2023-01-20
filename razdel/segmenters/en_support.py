@@ -3,7 +3,11 @@
 import copy
 
 from razdel.rule import JOIN, Rule
+
+from .punct import DASHES
+
 from .common_tokenize import (
+    Atom,
     APOSTROPHES,
     Rule2112,
     TokenSplit,
@@ -112,17 +116,50 @@ class OrdinalNumbers(Rule):
             return JOIN
         if (split.left_1.type == INT
             and split.right == 's'
-            and (len(split.left) == 4 and split.left[:2] in ('19, 20')
+            and (len(split.left) == 4 and split.left[:2] in ('19, 20') and split.left[-1] == '0'
                  or len(split.left) == 2  and split.left[1] == '0')):
             return JOIN
 
+
+class EnHyphenRule(Rule2112):
+    name = 'en_hyphen'
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._prefixes = {
+            "e",
+            "co",
+            "cross",
+            "non",
+            "pro",
+            "multi",
+            "mid",
+            "re",
+            "post",
+            "anti",
+            "all",
+            "vice",
+            "pre",
+            "mega",
+            "macro",
+            "neo"
+        }
+
+    def delimiter(self, delimiter):
+        return delimiter in DASHES
+
+
+    def rule(self, left:Atom, right:Atom):
+        if left.normal in self._prefixes:
+            return JOIN
 
 
 
 EN_RULES = [
     ApostropheRule(),
     ApostropheRightJoinRule(),
-    OrdinalNumbers()
+    OrdinalNumbers(),
+    EnHyphenRule()
 ]
 
 
