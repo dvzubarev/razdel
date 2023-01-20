@@ -3,9 +3,12 @@
 import copy
 
 from razdel.rule import JOIN, Rule
-from .common_tokenize import Rule2112
-
-APOSTROPHES = "'’`"
+from .common_tokenize import (
+    APOSTROPHES,
+    Rule2112,
+    TokenSplit,
+    INT
+)
 
 _SPECIAL_EN_TOKENS_BASE = {
     "can't": ["ca", "n't"],
@@ -103,11 +106,23 @@ class ApostropheRightJoinRule(Rule):
                 return JOIN
 
 
+class OrdinalNumbers(Rule):
+    def __call__(self, split:TokenSplit):
+        if split.left_1.type == INT and split.right in ('st', 'nd', 'rd', 'th'):
+            return JOIN
+        if (split.left_1.type == INT
+            and split.right == 's'
+            and (len(split.left) == 4 and split.left[:2] in ('19, 20')
+                 or len(split.left) == 2  and split.left[1] == '0')):
+            return JOIN
+
+
 
 
 EN_RULES = [
     ApostropheRule(),
-    ApostropheRightJoinRule()
+    ApostropheRightJoinRule(),
+    OrdinalNumbers()
 ]
 
 

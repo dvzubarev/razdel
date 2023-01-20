@@ -41,8 +41,11 @@ UNIT = parse_partitions([
     'Ми-8',
     'МЗП-1М',
     'x3-9890',
+    'i|&|1',
+    'S&P',
+    'AT&T',
 
-    'http://www.wikihow.com/wikiHow:Statistics|)',
+    '(|http://www.wikihow.com/wikiHow:Statistics|)',
     'http://im.yahoo.com/search?q=1&p=1%2C3%2C477#nor_re',
     'https://user@кто.рф:444/files/pdf/docs/rules_ru-rf.pdf|:)',
     'http://ex.ru|!',
@@ -55,6 +58,12 @@ UNIT = parse_partitions([
     'Secunia.edu.com|,',
     '<|ekrapels@esaibos.com|>',
     'privacy_policy!service@v-tell.com|.',
+    '@anna_li',
+    '@c3p1o',
+    '#хэштэг',
+    '#hash13',
+    '#|13',
+
     '»||.',
     ')||.',
     '(||«',
@@ -66,12 +75,17 @@ UNIT = parse_partitions([
     '',
 ])
 
-
 @pytest.mark.parametrize('test', UNIT)
 def test_unit(test):
     run(tokenize, test)
 
 RU_UNIT = parse_partitions([
+    'О\'Нил',
+    'Кот-д’Ивуар',
+    'Д’Артаньян',
+    'Л\'этуаль',
+    "пол|'|слова",
+
     '1-ый',
     '79-летний',
     'пол-яблока',
@@ -91,7 +105,12 @@ EN_APOSTROPHE_CASES = parse_partitions([
     "you|'d",
     "I|’ll",
     "must|'ve",
-    "she|`s"
+    "she|`s",
+    "L'Enfant",
+    "o'clock",
+    "Xi'an",
+    "O'Kicki",
+
 
 ])
 
@@ -119,6 +138,21 @@ EN_SPECIAL_CASES = parse_partitions([
 def test_en_special_cases(test):
     run(tokenize, test)
 
+EN_MISC_CASES = parse_partitions([
+    '31st',
+    '42nd',
+    '3rd',
+    '80th',
+    '1980s',
+    '1908s',
+    '80s',
+    '85|s'
+])
+
+
+@pytest.mark.parametrize('test', EN_MISC_CASES)
+def test_en_misc_cases(test):
+    run(tokenize, test)
 
 def int_tests(count):
     path = data_path('tokens.txt')

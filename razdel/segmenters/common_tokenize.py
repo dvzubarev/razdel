@@ -36,6 +36,7 @@ EMAIL = 'EMAIL'
 OTHER = 'OTHER'
 
 PUNCTS = '\\/!#$%&*+,.:;<=>?@^_`|~№…' + DASHES + QUOTES + BRACKETS
+APOSTROPHES = "'’`"
 
 ####complex atoms support
 _URI_SCHEME_REGEXP = r'\b(https?|git|s3)://'
@@ -162,6 +163,29 @@ class UnderscoreRule(Rule2112):
             return
         return JOIN
 
+class AmpRule(Rule2112):
+    name = 'ampersand'
+
+    def delimiter(self, delimiter):
+        return delimiter == '&'
+
+    def rule(self, left, right):
+        if (left.type in (LAT, RU)
+            and right.type in (LAT, RU)
+            and left.text[-1].isupper()
+            and right.text[0].isupper()):
+            return JOIN
+
+class CommonApostropheRule(Rule2112):
+    name = 'apostrophe'
+
+    def delimiter(self, delimiter):
+        return delimiter in APOSTROPHES
+
+    def rule(self, left:"Atom", right:"Atom"):
+        if (left.normal in ('д', 'л', 'о', 'd', 'o', 'xi', 'l')):
+            return JOIN
+
 
 class FloatRule(Rule2112):
     name = 'float'
@@ -186,17 +210,22 @@ class InsideDigitsRule(Rule2112):
 
 #########
 #
-#   Model names/ids (letters with digits)
+#  MISC alphanumeric identifiers: Model names, ids, etc.
 #
 ##########
 
-def model_names(split: "TokenSplit"):
+def alphanum_ids(split: "TokenSplit"):
     if split.right_1.type in (INT, RU, LAT):
         #MP3, А4, XR4Ti
         any_letter_before = any(c.isalpha() for c in split.buffer)
         if any_letter_before:
             return JOIN
 
+def tags(split: "TokenSplit"):
+    if split.left == '@' and split.right_1.type in (INT, RU, LAT):
+        return JOIN
+    if split.left == '#' and split.right_1.type in (RU, LAT):
+        return JOIN
 
 
 #########
@@ -359,6 +388,8 @@ class TokenSplitter(Splitter):
 COMMON_RULES = [
     DashRule(),
     UnderscoreRule(),
+    AmpRule(),
+    CommonApostropheRule(),
     FloatRule(),
     InsideDigitsRule(),
 
@@ -367,6 +398,7 @@ COMMON_RULES = [
 
     FunctionRule(yahoo),
 
-    FunctionRule(model_names),
+    FunctionRule(alphanum_ids),
+    FunctionRule(tags),
 
 ]
