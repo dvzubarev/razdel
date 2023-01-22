@@ -30,7 +30,7 @@ from .en_support import (
 #
 ########
 
-def ru_hyphen_specific_rules(split:TokenSplit):
+def ru_hyphen_complex_cases(split:TokenSplit):
     # 'Кот-д’Ивуар'
     if (split.left_1.normal == 'кот'
         and split.right in DASHES
@@ -90,6 +90,49 @@ class AdjHyphenRule(Rule2112):
             return JOIN
 
 
+class HyphenAbbrevsRule(Rule2112):
+    name = "ru_hyphen_abbr"
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._abbrevs = {
+            ("кол", "во"),
+            ("р", "н"),
+            ("гр", "н"),
+            ("пр", "кт"),
+            ("ун", "т"),
+            ("изд", "во"),
+            ("хоз", "во"),
+        }
+
+    def delimiter(self, delimiter):
+        return delimiter in DASHES
+
+    def rule(self, left:Atom, right:Atom):
+        words = (left.normal, right.normal)
+        if words in self._abbrevs:
+            return JOIN
+
+class HyphenAuxWords(Rule2112):
+    name = "ru_hyphen_aux"
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._aux_words = {
+            "эль",
+            "эш",
+            "о",
+            "au"
+        }
+
+    def delimiter(self, delimiter):
+        return delimiter in DASHES
+
+    def rule(self, left:Atom, right:Atom):
+        if left.normal in self._aux_words and right.text.istitle():
+            return JOIN
+        if right.normal in self._aux_words and left.text.istitle():
+            return JOIN
 
 ########
 #
@@ -98,8 +141,10 @@ class AdjHyphenRule(Rule2112):
 ########
 
 RU_RULES = [
-    FunctionRule(ru_hyphen_specific_rules),
+    FunctionRule(ru_hyphen_complex_cases),
     AdjHyphenRule(),
+    HyphenAbbrevsRule(),
+    HyphenAuxWords()
 
 ]
 

@@ -205,6 +205,11 @@ class DashRule(Rule2112):
             return JOIN
 
 
+
+        if left.text.istitle() and right.text.istitle():
+            # keep this as single token if both part are titlecased
+            return JOIN
+
         if left.type in (RU, LAT) and right.type in (RU, LAT):
             # keep this as single token if it is found in dictionary, split otherwise
             words_dict = get_words_dictionary()

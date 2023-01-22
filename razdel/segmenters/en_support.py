@@ -127,22 +127,24 @@ class EnHyphenRule(Rule2112):
     def __init__(self) -> None:
         super().__init__()
         self._prefixes = {
-            "e",
+            "al",
+            "all",
+            "anti",
             "co",
             "cross",
-            "non",
-            "pro",
-            "multi",
-            "mid",
-            "re",
-            "post",
-            "anti",
-            "all",
-            "vice",
-            "pre",
-            "mega",
+            "e",
+            "el",
             "macro",
+            "mega",
+            "mid",
+            "multi",
             "neo"
+            "non",
+            "post",
+            "pre",
+            "pro",
+            "re",
+            "vice",
         }
 
     def delimiter(self, delimiter):
