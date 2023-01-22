@@ -1,4 +1,6 @@
 
+import os
+
 from setuptools import setup, find_packages
 
 
@@ -8,7 +10,7 @@ with open('README.md') as file:
 
 setup(
     name='razdel',
-    version='0.5.0',
+    version=os.environ.get('version', '0'),
 
     description='Splits russian text into tokens, sentences, section. Rule-based',
     long_description=description,
