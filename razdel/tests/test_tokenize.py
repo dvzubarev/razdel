@@ -118,6 +118,13 @@ RU_UNIT = parse_partitions([
     'Л\'этуаль',
     "пол|'|слова",
 
+    'стр.',
+    'П.',
+    'и| |т.|д.',
+    'т.| |д.',
+    'к.|т.|н.',
+    # like к.ф.-м.н.
+    'к.|т.|-|т.|н.',
 ])
 
 @pytest.mark.parametrize('test', RU_UNIT)
@@ -181,6 +188,8 @@ EN_MISC_CASES = parse_partitions([
     'its| |30|-|day',
     'e-ink',
     'vice-president',
+    'corp.',
+    'p.m.| |8| |a.m.'
 
 ])
 

@@ -25,6 +25,7 @@ from .punct import (
     SMILES
 )
 
+from .sokr import SOKRS, PAIR_SOKRS
 
 RU = 'RU'
 LAT = 'LAT'
@@ -108,6 +109,11 @@ def clean_uri_atom(uri_text):
 #
 ######
 
+
+class BaseWordDictionary:
+    def is_word_known(self, word:str, lang: str):
+        return False
+
 _WORDS_DICTIONARY = None
 
 def init_words_dictionary(words_dict):
@@ -115,9 +121,6 @@ def init_words_dictionary(words_dict):
     _WORDS_DICTIONARY = words_dict
 
 
-class BaseWordDictionary:
-    def is_word_known(self, word:str, lang: str):
-        return False
 
 def get_words_dictionary()->BaseWordDictionary:
     global _WORDS_DICTIONARY
@@ -125,6 +128,30 @@ def get_words_dictionary()->BaseWordDictionary:
         #by default init with empty dict
         _WORDS_DICTIONARY = BaseWordDictionary()
     return _WORDS_DICTIONARY
+
+class DefAbbrsWordDictionary(BaseWordDictionary):
+    def __init__(self) -> None:
+        self._known_pair_abbrs = frozenset(' '.join(a) for a in PAIR_SOKRS)
+
+    def is_word_known(self, word:str, lang: str):
+        if word in SOKRS:
+            return True
+        return word in self._known_pair_abbrs
+
+
+_ABBREVS_DICTIONARY = None
+
+
+def init_abbrevs_dictionary(abbrevs_dict):
+    global _ABBREVS_DICTIONARY
+    _ABBREVS_DICTIONARY = abbrevs_dict
+
+def get_abbrevs_dictionary()->BaseWordDictionary:
+    global _ABBREVS_DICTIONARY
+    if _ABBREVS_DICTIONARY is None:
+        #by default init with abrrevs from sokr module
+        _ABBREVS_DICTIONARY = DefAbbrsWordDictionary()
+    return _ABBREVS_DICTIONARY
 
 
 ##########
@@ -235,6 +262,7 @@ class FloatRule(Rule2112):
             return JOIN
 
 
+
 class InsideDigitsRule(Rule2112):
     name = 'inside_digits'
 
@@ -244,6 +272,54 @@ class InsideDigitsRule(Rule2112):
     def rule(self, left, right):
         if left.type == INT and right.type == INT:
             return JOIN
+
+#########
+#
+#  Common Abbrevs support
+#
+##########
+
+def abbrevs(split: "TokenSplit"):
+    def _det_lang(atom:"Atom"):
+        return 'ru' if atom.type == RU else 'en'
+
+    #detect pair abbrevs
+    pair = None
+    between_pair = False
+    lang = None
+    if split.right == '.' and split.right_3 and split.right_3.text == '.':
+        #т|.д.
+        pair = f'{split.left_1.normal} {split.right_2.normal}'
+        lang = _det_lang(split.left_1)
+    elif split.left_2 and split.left == '.' and split.right_2 and split.right_2.text == '.':
+        #т.|д.
+        pair = f'{split.left_2.normal} {split.right_1.normal}'
+        lang = _det_lang(split.left_2)
+        between_pair = True
+    elif split.left_3 and split.left_2 and split.left_2.text == '.' and split.right == '.':
+        #т.д|.
+        pair = f'{split.left_3.normal} {split.left_1.normal}'
+        lang = _det_lang(split.left_3)
+
+    abbrevs_dict = get_abbrevs_dictionary()
+    if pair is not None and lang is not None:
+        if not between_pair:
+            if abbrevs_dict.is_word_known(pair, lang):
+                return JOIN
+        else:
+            if lang == 'en' and abbrevs_dict.is_word_known(pair, lang):
+                return JOIN
+
+    #single abbr
+    if split.right == '.':
+        #г|. or Д|.
+
+        if len(split.left) == 1 and split.left.isupper():
+            return JOIN
+        lang = _det_lang(split.left_1)
+        if abbrevs_dict.is_word_known(split.left_1.normal, lang):
+            return JOIN
+
 
 #########
 #
@@ -439,6 +515,7 @@ COMMON_RULES = [
     FloatRule(),
     InsideDigitsRule(),
 
+    FunctionRule(abbrevs),
     FunctionRule(punct),
     FunctionRule(other),
 
