@@ -190,21 +190,31 @@ class Rule2112(Rule):
         return self.rule(left, right)
 
 
-class DashRule(Rule2112):
+class DashRule(Rule):
     name = 'dash'
 
     def delimiter(self, delimiter):
         return delimiter in DASHES
 
 
-    def rule(self, left:"Atom", right:"Atom"):
+    def __call__(self, split:"TokenSplit"):
+        if self.delimiter(split.left):
+            # cho-|to
+            left_2, left, right, right_2 = split.left_3, split.left_2, split.right_1, split.right_2
+        elif self.delimiter(split.right):
+            # cho|-to
+            left_2, left, right, right_2 = split.left_2, split.left_1, split.right_2, split.right_3
+        else:
+            return
+
+        if not left or not right:
+            return
+
         if left.type == INT and right.type == RU:
             return JOIN
 
         if left.type in (LAT, RU) and right.type == INT:
             return JOIN
-
-
 
         if left.text.istitle() and right.text.istitle():
             # keep this as single token if both part are titlecased
@@ -213,11 +223,20 @@ class DashRule(Rule2112):
         if left.type in (RU, LAT) and right.type in (RU, LAT):
             # keep this as single token if it is found in dictionary, split otherwise
             words_dict = get_words_dictionary()
-            word = left.text + '-' + right.text
+
+            prefix = ''
+            if left_2 and left_2.text in DASHES and left_2.stop == left.start:
+                #state-\of|-the-art
+                prefix = '-'
+            suffix = ''
+            if right_2 and right_2.text in DASHES and right.stop == right_2.start:
+                #state-of|-the/-art
+                suffix = '-'
+            word = prefix + left.text + '-' + right.text + suffix
+
             lang = 'ru' if left.type == RU or right.type == RU else 'en'
             if words_dict.is_word_known(word, lang):
                 return JOIN
-
 
 
 

@@ -89,7 +89,9 @@ def with_words_dict():
     class DummyDict(BaseWordDictionary):
         def __init__(self) -> None:
             super().__init__()
-            self.known_words = {'что-то', 'премьер-министром'}
+            self.known_words = {'что-то', 'премьер-министром',
+                                #en
+                                'state-of-', '-of-the-', '-the-art'}
         def is_word_known(self, word, lang):
             return word in self.known_words
 
@@ -102,6 +104,7 @@ def with_words_dict():
 RU_UNIT = parse_partitions([
     'что-то',
     'премьер-министром',
+    '-| |премьер-министром',
     'строитель|-|программист',
     '1-ый',
     '79-летний',
@@ -195,13 +198,14 @@ EN_MISC_CASES = parse_partitions([
     'its| |30|-|day',
     'e-ink',
     'vice-president',
+    'state-of-the-art',
+    'its| |-| |of|-|the| |-| |art',
     'corp.',
     'p.m.| |8| |a.m.'
-
 ])
 
 @pytest.mark.parametrize('test', EN_MISC_CASES)
-def test_en_misc_cases(test):
+def test_en_misc_cases(test, with_words_dict):
     run(tokenize, test)
 
 def int_tests(count):
