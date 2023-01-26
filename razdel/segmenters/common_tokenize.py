@@ -315,12 +315,12 @@ def abbrevs(split: "TokenSplit"):
         #т|.д.
         pair = f'{split.left_1.normal} {split.right_2.normal}'
         lang = _det_lang(split.left_1)
-    elif split.left_2 and split.left == '.' and split.right_2 and split.right_2.text == '.':
+    if split.left_2 and split.left == '.' and split.right_2 and split.right_2.text == '.':
         #т.|д.
         pair = f'{split.left_2.normal} {split.right_1.normal}'
         lang = _det_lang(split.left_2)
         between_pair = True
-    elif split.left_3 and split.left_2 and split.left_2.text == '.' and split.right == '.':
+    if split.left_3 and split.left_2 and split.left_2.text == '.' and split.right == '.':
         #т.д|.
         pair = f'{split.left_3.normal} {split.left_1.normal}'
         lang = _det_lang(split.left_3)
@@ -336,7 +336,7 @@ def abbrevs(split: "TokenSplit"):
 
     #single abbr
     if split.right == '.':
-        #г|. or Д|.
+        #гг|. or Д|.
 
         if len(split.left) == 1 and split.left.isupper():
             return JOIN
