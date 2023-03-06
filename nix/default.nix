@@ -10,6 +10,6 @@ buildPythonPackage {
   inherit src;
 
   propagatedBuildInputs=[];
-  checkInputs=[pytest];
+  nativeCheckInputs=[pytest];
   checkPhase="pytest razdel --int 0";
 }

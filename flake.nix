@@ -7,7 +7,7 @@
     let pkgs = import textapp-pkgs.inputs.nixpkgs {
           system = "x86_64-linux";
           overlays = [ textapp-pkgs.overlays.default self.overlays.default ];
-          config.allowUnfree = true;
+          config = textapp-pkgs.passthru.pkgs-config;
         };
         tlib = textapp-pkgs.lib;
         pypkgs = pkgs.python-torch.pkgs;
