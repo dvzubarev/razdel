@@ -11,7 +11,8 @@ from .common_tokenize import (
     APOSTROPHES,
     Rule2112,
     TokenSplit,
-    INT
+    INT,
+    LAT
 )
 
 _SPECIAL_EN_TOKENS_BASE = {
@@ -168,12 +169,15 @@ EN_RULES = [
 def en_postproc(chunks):
     en_split_rules_dict = _get_special_en_tokens()
 
-    for chunk in chunks:
+    for chunk, atom_type in chunks:
+        if atom_type != LAT:
+            yield chunk, atom_type
+            continue
         lower_chunk = chunk.lower()
         if (split := en_split_rules_dict.get(lower_chunk)):
             assert len(split) == 2, f"{len(split)} split len is unsupported"
             split_point = len(split[0])
-            yield chunk[:split_point]
-            yield chunk[split_point:]
+            yield chunk[:split_point], atom_type
+            yield chunk[split_point:], atom_type
         else:
-            yield chunk
+            yield chunk, atom_type

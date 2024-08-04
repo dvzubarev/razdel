@@ -1,8 +1,9 @@
 
 import pytest
 
-from razdel import tokenize
+from razdel import tokenize as tokenize_orig
 from razdel.segmenters.common_tokenize import BaseWordDictionary, init_words_dictionary
+from razdel.substring import Substring
 
 from .partition import parse_partitions
 from .common import (
@@ -11,6 +12,10 @@ from .common import (
     data_lines
 )
 
+def tokenize(text):
+    #convert Token to Substring, so tests can compare gold results with tokenize output
+    for t in tokenize_orig(text):
+        yield Substring(t.start, t.stop, t.text)
 
 UNIT = parse_partitions([
     '1',

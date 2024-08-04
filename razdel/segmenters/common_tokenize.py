@@ -82,10 +82,10 @@ SMILE = re.compile(r'^' + SMILES + '$', re.U)
 def clean_uri_atom(uri_text):
     fixed_uri = None
     if uri_text[-1] in ')]':
-        #brackets are allowed in uri and they used in some DOIs
-        #but doi can be in bracket, for example (doi:10.1/1).
+        #brackets are allowed in uri and they are used in some DOIs.
+        #Doi itself may be in bracket, for example (doi:10.1/1).
         #So closing bracket will be part of a DOI, but this is mistake.
-        #Try to fix this mistake, assuming that brackets  should be balanced inside DOI.
+        #Try to fix this mistake, assuming that brackets should be balanced inside DOI.
         closing_symbol = uri_text[-1]
         opening_symbol = '(' if closing_symbol == ')' else '['
         num_opening_symbols = uri_text.count(opening_symbol)
@@ -528,7 +528,7 @@ class TokenSplitter(Splitter):
                 left = atoms[max(0, index - self.window):index]
                 right = atoms[index:index + self.window]
                 yield TokenSplit(left, delimiter, right)
-            yield atom.text
+            yield atom.text, atom.type
 
 
 COMMON_RULES = [

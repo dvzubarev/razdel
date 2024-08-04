@@ -24,17 +24,14 @@
       devShells.x86_64-linux.default =
         pkgs.mkShell {
           buildInputs = [
-            pypkgs.python
+            pkgs.pyright
+
             pypkgs.pytest
             pypkgs.pytest-flakes
-            tpkgs.pyright
-            pypkgs.pylint
             pypkgs.ipykernel
-          ];
 
-          shellHook=''
-          [ -n "$PS1" ] && setuptoolsShellHook
-            '';
+            pypkgs.pythonDevHook
+          ];
 
         };
     };
