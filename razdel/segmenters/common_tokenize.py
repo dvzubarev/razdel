@@ -51,7 +51,9 @@ _COMMON_TLD_REGEXP = r'(?:com|net|org|int|edu|gov|de|icu|uk|ru|info|top|xyz|tk|c
 DOMAIN_WITH_PATH_REGEXP = r'\b[-a-zа-я0-9.]{1,256}\.' + _COMMON_TLD_REGEXP + _URI_SANE_PATH_REGEXP
 
 URI_WITH_HOST_REGEXP = _URI_SCHEME_REGEXP + _URI_HOST_REGEXP + _URI_SANE_PATH_REGEXP
-DOI_REGEXP = r'doi:10\.\d+' + _URI_FULL_VALID_PATH_REGEXP
+#it is common? to put a space after doi:
+#doi: 10.1109/TCAD.2013.2244643.
+DOI_REGEXP = r'doi:\s?10\.\d+' + _URI_FULL_VALID_PATH_REGEXP
 
 EMAIL_REGEXP = r"\b[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]{1,256}\b"
 

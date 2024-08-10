@@ -58,6 +58,8 @@ UNIT = parse_partitions([
     'http://ex.ru|!',
     'https://ru.wikipedia.org/wiki/%D0%A1_%D0%B4|,',
     'doi:10.1037/0022-3514.92.6.1087',
+    'doi: 10.1109/TCAD.2013.2244643|.',
+    'doi:\n10.1109/ISDA.2007.5|.',
     'doi:10.1002/0470856009.ch2f(ii)',
     '(|doi:10.1002/0470856009.ch2f(ii)|)|,',
 
