@@ -283,8 +283,10 @@ class FloatRule(Rule2112):
     def delimiter(self, delimiter):
         return delimiter in '.,'
 
-    def rule(self, left, right):
-        if left.type == INT and right.type == INT:
+    def rule(self, left:"Atom", right:"Atom"):
+        #check that there is no space between delimiter and any part.
+        #left stop (it is pos of delimiter) + 1 should be equal to start of the right.
+        if left.type == INT and right.type == INT and left.stop + 1 == right.start:
             return JOIN
 
 
