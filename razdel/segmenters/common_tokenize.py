@@ -356,19 +356,24 @@ def abbrevs(split: "TokenSplit"):
 ##########
 
 def alphanum_ids(split: "TokenSplit"):
-    if split.right_1.type == INT and any(c.isalpha() for c in split.buffer):
+    assert split.buffer is not None, "Logic error 12"
+    alphanum_id_regex = r'^[@#]?\w++[\w_–-]*+'
+
+    if (split.right_1.type == INT and re.fullmatch(alphanum_id_regex, split.buffer) is not None):
         #MP3, А4, XR4Ti
-        return JOIN
-    if (split.left_1.type == LAT and split.right_1.type == RU or
-        split.left_1.type == RU and split.right_1.type == LAT):
-        #СаМgВ6O8
         return JOIN
 
     if (split.left_1.type == INT
         and (split.right_1.text in DASHES or split.right_1.type in (LAT, RU))
         and not split.buffer.isdigit()
+        and re.fullmatch(alphanum_id_regex, split.buffer) is not None
         ):
         # x3-9890
+        return JOIN
+
+    if (split.left_1.type == LAT and split.right_1.type == RU or
+        split.left_1.type == RU and split.right_1.type == LAT):
+        #СаМgВ6O8
         return JOIN
 
 def tags(split: "TokenSplit"):
