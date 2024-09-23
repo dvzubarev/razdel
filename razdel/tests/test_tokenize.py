@@ -50,6 +50,7 @@ UNIT = parse_partitions([
     'XR4Ti',
     'АК-47',
     'Ми-8',
+    'CO2–N2',
     'МЗП-1М',
     'x3-9890',
     'MiG-23BN',
@@ -214,6 +215,9 @@ EN_MISC_CASES = parse_partitions([
     'e-ink',
     'vice-president',
     'state-of-the-art',
+    'Time-of-Flight',
+    'Time|-|optimal',
+    'Just-in-Time-Compiling',
     'its| |-| |of|-|the| |-| |art',
     'corp.',
     'p.m.| |8| |a.m.'

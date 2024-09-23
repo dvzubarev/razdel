@@ -212,13 +212,15 @@ class DashRule(Rule):
         if not left or not right:
             return
 
-        if left.type == INT and right.type == RU:
+        if left.type == INT and (right.type == RU or right.text.istitle()):
             return JOIN
 
         if left.type in (LAT, RU) and right.type == INT:
             return JOIN
 
-        if left.text.istitle() and right.text.istitle():
+        if (left.text.istitle() and right.text.istitle() or
+            left.text in ('in', 'of') and right.text.istitle() or
+            left.text.istitle() and right.text in ('in', 'of')):
             # keep this as single token if both part are titlecased
             return JOIN
 
