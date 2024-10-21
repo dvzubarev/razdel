@@ -293,15 +293,42 @@ class FloatRule(Rule2112):
 
 
 
-class InsideDigitsRule(Rule2112):
+class InsideDigitsRule(Rule):
     name = 'inside_digits'
 
     def delimiter(self, delimiter):
         return delimiter in 'xXхХ:/\\'
 
-    def rule(self, left, right):
-        if left.type == INT and right.type == INT:
-            return JOIN
+    def __call__(self, split:"TokenSplit"):
+        if self.delimiter(split.left):
+            # cho-|to
+            delim, left, right, right_2 = split.left, split.left_2, split.right_1, split.right_2
+        elif self.delimiter(split.right):
+            # cho|-to
+            delim, left, right, right_2 = split.right, split.left_1, split.right_2, split.right_3
+        else:
+            return
+
+        if not left or not right:
+            return
+
+        #check that there is space between right and right_2.
+        #right's stop should not be equal to start of the right_2.
+        # print('right', right, 'right2', right_2)
+        if left.type == INT and right.type == INT and (right_2 is None or
+                                                       right.stop != right_2.start):
+
+            if delim == ':':
+                #keep as single token only if it looks like time
+                try:
+                    if (len(left.text)< 3 and len(right.text) < 3 and
+                        0 < int(left.text) <= 24 and
+                        0 < int(right.text) < 60):
+                        return JOIN
+                except ValueError:
+                    pass
+            else:
+                return JOIN
 
 #########
 #
